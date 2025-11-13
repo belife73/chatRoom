@@ -50,6 +50,7 @@ public:
 
             memcpy(text, data.c_str() + offset, sizeof(text)); // 将字符串中的消息正文解析出来
         }
+        // 测试
     };
 
     // 客户端结构体类型
