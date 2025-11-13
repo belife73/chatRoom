@@ -7,9 +7,8 @@
 #include <condition_variable> //条件变量头文件
 #include <mutex>              //互斥锁头文件
 #include <functional>         //用于使用函数类型
-#include <netinet/in.h>       // for sockaddr_in
-#include <string>             // for std::string
-#include <cstring>            // for memcpy
+#include <cstring>           //字符串操作函数
+#include <netinet/in.h>       //网络编程头文件
 
 #define N 128   // 消息缓冲区的大小
 #define LOGIN 1 // 表示登录消息类型
@@ -25,10 +24,12 @@ public:
     {
         int type;      // 消息类型
         char name[20]; // 客户端名称
+        char text[N];  // 消息内容
+
         // 序列化函数：将消息结构体转为二进制数据，便于传输
         std::string serialize() const
         {
-            std::string data;                                                 // 临时变量存储要转换的字符串
+            std::string data;                                                      // 临时变量存储要转换的字符串
             data.append(reinterpret_cast<const char *>(&type), sizeof(type)); // 将消息类型放入字符串
             data.append(name, sizeof(name));                                  // 将消息中的客户端名称放入字符串
             data.append(text, sizeof(text));                                  // 将消息正文放入字符串
@@ -49,8 +50,6 @@ public:
 
             memcpy(text, data.c_str() + offset, sizeof(text)); // 将字符串中的消息正文解析出来
         }
-            memcpy(text, data.c_str() + offset, sizeof(text)); // 将字符串中的消息正文解析出来
-        }
     };
 
     // 客户端结构体类型
@@ -58,23 +57,22 @@ public:
     {
         int fd;                 // 客户端套接字
         struct sockaddr_in cin; // 客户端地址信息结构体
+    };
 private:
-    int sfd;                       // 服务器套接字
-    std::vector<Client> clients;   // 在线的客户端列表
-    std::mutex client_mutex;       // 保护 clients  客户端列表的互斥锁
+    int sfd;                // 服务器套接字
+    std::vector<Client> clients; // 在线的客户端列表
+    std::mutex client_mutex;     // 保护 clients  客户端列表的互斥锁
 
     // 线程池相关变量
     std::vector<std::thread> workers;        // 存储工作的线程容器
     std::queue<std::function<void()>> tasks; // 存储任务的队列
-    std::mutex task_mutex;                   // 互斥锁
-    std::condition_variable task_cv;         // 用于通知线程有新任务的条件变量
-    bool stop;                               // 线程池的标志，判断线程池是否停止
+    std::mutex task_mutex;              // 互斥锁
+    std::condition_variable task_cv;    // 用于通知线程有新任务的条件变量
+    bool stop;                     // 线程池的标志，判断线程池是否停止
 
     void errLog(const char *msg);            // 错误信息日志函数
     void startThreadPool(size_t numThreads); // 启动线程池函数
     void addTask(std::function<void()> task);     // 将任务添加到线程池中
-    void startThreadPool(size_t numThreads); // 启动线程池函数
-    void addTask(function<void()> task);     // 将任务添加到线程池中
 
 public:
     chatServer(const char *ip, int port, size_t threadPoolSize = 4); // 构造函数声明
